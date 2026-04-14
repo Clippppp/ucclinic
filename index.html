@@ -745,16 +745,19 @@
 
 <!-- ══════════════ 관리자 VIEW ══════════════ -->
 <div id="view-admin" class="view">
-  <!-- 로그인 -->
-  <div id="admin-login-screen" class="admin-login">
-    <div class="admin-login-card">
-      <div style="font-size:2.5rem;margin-bottom:12px;">🔐</div>
-      <h2>관리자 로그인</h2>
-      <p>관리자 비밀번호를 입력해 주세요</p>
-      <input type="password" id="admin-pw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')adminLogin()">
-      <button class="login-btn" onclick="adminLogin()">로그인</button>
-      <div class="login-error" id="login-error">비밀번호가 올바르지 않습니다.</div>
-      <p style="margin-top:16px;font-size:0.75rem;color:var(--muted);">기본 비밀번호: <strong>????</strong> (하단 설정에서 변경 가능)</p>
+
+  <!-- 로그인 화면 (비밀번호 설정 후에만 표시) -->
+  <div id="admin-login-screen" style="display:none;">
+    <div class="admin-login">
+      <div class="admin-login-card">
+        <div style="font-size:2.5rem;margin-bottom:12px;">🔐</div>
+        <h2>관리자 로그인</h2>
+        <p>비밀번호를 입력해 주세요</p>
+        <input type="password" id="admin-pw" placeholder="비밀번호"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="login-btn" id="login-btn" onclick="doLogin()">로그인</button>
+        <div class="login-error" id="login-error">비밀번호가 올바르지 않습니다.</div>
+      </div>
     </div>
   </div>
 
@@ -768,7 +771,7 @@
         </div>
         <div class="admin-actions">
           <button class="action-btn btn-export" onclick="exportCSV()">📊 CSV 내보내기</button>
-          <button class="action-btn btn-logout" onclick="adminLogout()">로그아웃</button>
+          <button class="action-btn btn-logout" id="logout-btn" onclick="doLogout()" style="display:none;">로그아웃</button>
         </div>
       </div>
 
@@ -780,7 +783,46 @@
         <br>
         <button class="config-save" onclick="saveSheetURL()">저장</button>
         <span id="url-saved" style="font-size:0.8rem;color:var(--success);margin-left:10px;display:none;">✔ 저장됨</span>
-        <p style="margin-top:8px;color:#78350f;font-size:0.75rem;">설정 방법: 페이지 하단 <strong>「구글 시트 연동 방법」</strong> 안내를 참고하세요.</p>
+        <p style="margin-top:8px;color:#78350f;font-size:0.75rem;">설정 방법: 페이지 하단 「구글 시트 연동 방법」 안내를 참고하세요.</p>
+      </div>
+
+      <!-- 비밀번호 관리 카드 -->
+      <div id="pw-mgmt-card" style="display:none;background:white;border-radius:14px;padding:20px 24px;box-shadow:0 2px 12px rgba(15,30,60,0.06);margin-bottom:20px;">
+        <div id="pw-set-section">
+          <div style="font-weight:700;font-size:0.95rem;color:var(--navy);margin-bottom:4px;">🔒 관리자 비밀번호 설정</div>
+          <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;">비밀번호를 설정하면 이후 모든 기기에서 로그인이 필요합니다.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="field" style="flex:1;min-width:180px;">
+              <label>새 비밀번호</label>
+              <input type="password" id="pw-set-new" placeholder="비밀번호 입력 (4자 이상)">
+            </div>
+            <div class="field" style="flex:1;min-width:180px;">
+              <label>비밀번호 확인</label>
+              <input type="password" id="pw-set-confirm" placeholder="비밀번호 재입력">
+            </div>
+            <button class="config-save" style="padding:11px 20px;" onclick="setPassword()">비밀번호 설정</button>
+          </div>
+          <div id="pw-set-msg" style="font-size:0.82rem;margin-top:10px;display:none;font-weight:700;"></div>
+        </div>
+        <div id="pw-change-section" style="display:none;">
+          <div style="font-weight:700;font-size:0.95rem;color:var(--navy);margin-bottom:4px;">🔑 비밀번호 변경</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="field" style="flex:1;min-width:150px;">
+              <label>현재 비밀번호</label>
+              <input type="password" id="pw-ch-current" placeholder="현재 비밀번호">
+            </div>
+            <div class="field" style="flex:1;min-width:150px;">
+              <label>새 비밀번호</label>
+              <input type="password" id="pw-ch-new" placeholder="새 비밀번호">
+            </div>
+            <div class="field" style="flex:1;min-width:150px;">
+              <label>확인</label>
+              <input type="password" id="pw-ch-confirm" placeholder="새 비밀번호 확인">
+            </div>
+            <button class="config-save" style="padding:11px 20px;" onclick="changePassword()">변경</button>
+          </div>
+          <div id="pw-ch-msg" style="font-size:0.82rem;margin-top:10px;display:none;font-weight:700;"></div>
+        </div>
       </div>
 
       <div class="stats-row" id="stats-row"></div>
@@ -831,14 +873,38 @@ function doPost(e) {
     data.timeSlot, data.subject, data.detail, data.note,
     new Date().toLocaleString('ko-KR')
   ]);
-  return ContentService
-    .createTextOutput(JSON.stringify({result:'success'}))
-    .setMimeType(ContentService.MimeType.JSON);
+  return json({result:'success'});
 }
 
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({status:'ok'}))
+  var props = PropertiesService.getScriptProperties();
+  var stored = props.getProperty('ADMIN_PW');           // null이면 미설정
+  var action = e.parameter.action;
+
+  if (action === 'checkPw') {
+    // 비밀번호 설정 여부만 반환 (비밀번호 자체는 노출 안 함)
+    return json({ hasPw: !!stored });
+  }
+  if (action === 'verifyPw') {
+    if (!stored) return json({ ok: true });              // 미설정 = 항상 통과
+    return json({ ok: e.parameter.pw === stored });
+  }
+  if (action === 'setPw') {
+    if (stored) return json({ ok: false, msg: '이미 비밀번호가 설정되어 있습니다.' });
+    if (!e.parameter.pw) return json({ ok: false, msg: '비밀번호를 입력해 주세요.' });
+    props.setProperty('ADMIN_PW', e.parameter.pw);
+    return json({ ok: true });
+  }
+  if (action === 'changePw') {
+    if (e.parameter.current !== stored) return json({ ok: false, msg: '현재 비밀번호가 올바르지 않습니다.' });
+    props.setProperty('ADMIN_PW', e.parameter.next);
+    return json({ ok: true });
+  }
+  return json({ status: 'ok', hasPw: !!stored });
+}
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }</pre>
           <ol style="padding-left:20px;" start="4">
@@ -846,33 +912,6 @@ function doGet(e) {
             <li>유형: <strong>웹 앱</strong> 선택 → 액세스: <strong>모든 사용자</strong>로 설정합니다.</li>
             <li>배포 후 생성된 <strong>웹앱 URL</strong>을 복사하여 위 설정창에 붙여넣습니다.</li>
           </ol>
-        </div>
-      </details>
-    </div>
-
-    <!-- 비밀번호 변경 설정 -->
-    <div style="max-width:1100px;margin:0 auto 12px;padding:0 2rem;">
-      <details style="background:white;border-radius:14px;padding:20px 24px;box-shadow:0 2px 12px rgba(15,30,60,0.06);">
-        <summary style="font-weight:700;font-size:0.95rem;cursor:pointer;color:var(--navy);">🔑 관리자 비밀번호 변경 (클릭하여 펼치기)</summary>
-        <div style="margin-top:16px;max-width:400px;">
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="field">
-              <label>현재 비밀번호</label>
-              <input type="password" id="pw-current" placeholder="현재 비밀번호 입력">
-            </div>
-            <div class="field">
-              <label>새 비밀번호</label>
-              <input type="password" id="pw-new" placeholder="새 비밀번호 입력">
-            </div>
-            <div class="field">
-              <label>새 비밀번호 확인</label>
-              <input type="password" id="pw-confirm" placeholder="새 비밀번호 재입력">
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
-              <button class="config-save" style="padding:9px 20px;font-size:0.85rem;" onclick="changePassword()">비밀번호 변경</button>
-              <span id="pw-msg" style="font-size:0.82rem;display:none;"></span>
-            </div>
-          </div>
         </div>
       </details>
     </div>
@@ -953,11 +992,9 @@ const SUBJECTS = [
   { value: '기타', emoji: '💬', custom: true },
 ];
 
-const ADMIN_PW_KEY = 'clinic_admin_pw';
 const SHEETS_URL_KEY = 'clinic_sheets_url';
 const DATA_KEY = 'clinic_submissions';
 
-function getAdminPw() { return localStorage.getItem(ADMIN_PW_KEY) || '1234'; }
 function getSheetURL() { return localStorage.getItem(SHEETS_URL_KEY) || ''; }
 function getData() { return JSON.parse(localStorage.getItem(DATA_KEY) || '[]'); }
 function saveData(d) { localStorage.setItem(DATA_KEY, JSON.stringify(d)); }
@@ -977,8 +1014,8 @@ function renderOptions() {
   const sc = document.getElementById('slots-container');
   const days = ['월요일','화요일','수요일','목요일'];
   const blocks = [
-    { label: '앞 시간', time: '17:00 – 19:30' },
-    { label: '뒷 시간', time: '19:30 – 22:00' },
+    { label: '오후반', time: '17:00 – 19:30' },
+    { label: '야간반', time: '19:30 – 22:00' },
   ];
 
   let html = `<div class="schedule-grid">
@@ -1079,31 +1116,150 @@ async function submitForm(e) {
 }
 
 // ══ 관리자 ══
-function initAdminView() {
-  const loggedIn = sessionStorage.getItem('clinic_admin_auth');
-  document.getElementById('admin-login-screen').style.display = loggedIn ? 'none' : 'block';
-  document.getElementById('admin-dashboard').style.display = loggedIn ? 'block' : 'none';
-  if (loggedIn) loadDashboard();
+// ══ Apps Script 안전 요청 헬퍼 ══
+// 어떤 에러가 나도 null 반환, 절대 throw 안 함
+async function fetchScript(params, timeoutMs = 7000) {
+  const url = getSheetURL();
+  if (!url) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const qs  = new URLSearchParams(params).toString();
+    const res = await fetch(`${url}?${qs}`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    const text = await res.text();
+    return JSON.parse(text);
+  } catch (_) {
+    clearTimeout(timer);
+    return null;
+  }
 }
 
-function adminLogin() {
-  const pw = document.getElementById('admin-pw').value;
-  if (pw === getAdminPw()) {
+// ══ 관리자 진입 ══
+async function initAdminView() {
+  // Apps Script URL이 없으면 → 바로 대시보드
+  const url = getSheetURL();
+  if (!url) {
+    showDashboard(false);
+    return;
+  }
+
+  // 서버에 비밀번호 설정 여부 확인
+  const data = await fetchScript({ action: 'checkPw' });
+
+  if (!data || !data.hasPw) {
+    // 비밀번호 미설정 or 서버 응답 없음 → 바로 대시보드
+    showDashboard(false);
+  } else {
+    // 비밀번호 있음 → 이미 로그인된 세션인지 확인
+    if (sessionStorage.getItem('clinic_admin_auth') === '1') {
+      showDashboard(true);
+    } else {
+      showLoginScreen();
+    }
+  }
+}
+
+function showLoginScreen() {
+  document.getElementById('admin-login-screen').style.display = 'block';
+  document.getElementById('admin-dashboard').style.display  = 'none';
+}
+
+function showDashboard(hasPassword) {
+  document.getElementById('admin-login-screen').style.display = 'none';
+  document.getElementById('admin-dashboard').style.display   = 'block';
+  // 비밀번호 없으면 설정 섹션, 있으면 변경 섹션 표시
+  const card = document.getElementById('pw-mgmt-card');
+  const url  = getSheetURL();
+  if (url) {
+    card.style.display = 'block';
+    document.getElementById('pw-set-section').style.display    = hasPassword ? 'none'  : 'block';
+    document.getElementById('pw-change-section').style.display = hasPassword ? 'block' : 'none';
+  } else {
+    card.style.display = 'none';
+  }
+  document.getElementById('logout-btn').style.display = hasPassword ? 'inline-flex' : 'none';
+  loadDashboard();
+}
+
+async function doLogin() {
+  const pw  = document.getElementById('admin-pw').value;
+  const btn = document.getElementById('login-btn');
+  document.getElementById('login-error').classList.remove('show');
+  btn.disabled = true; btn.textContent = '확인 중...';
+
+  const data = await fetchScript({ action: 'verifyPw', pw });
+  const ok   = data?.ok === true;          // 서버 응답 있을 때만 true
+
+  btn.disabled = false; btn.textContent = '로그인';
+
+  if (ok) {
     sessionStorage.setItem('clinic_admin_auth', '1');
-    document.getElementById('admin-login-screen').style.display = 'none';
-    document.getElementById('admin-dashboard').style.display = 'block';
-    document.getElementById('login-error').classList.remove('show');
-    loadDashboard();
+    showDashboard(true);
   } else {
     document.getElementById('login-error').classList.add('show');
   }
 }
 
-function adminLogout() {
+function doLogout() {
   sessionStorage.removeItem('clinic_admin_auth');
-  document.getElementById('admin-login-screen').style.display = 'block';
-  document.getElementById('admin-dashboard').style.display = 'none';
   document.getElementById('admin-pw').value = '';
+  showLoginScreen();
+}
+
+// ══ 비밀번호 설정 (최초) ══
+async function setPassword() {
+  const nextPw    = document.getElementById('pw-set-new').value;
+  const confirmPw = document.getElementById('pw-set-confirm').value;
+  const msg       = document.getElementById('pw-set-msg');
+  const show = (t, c) => { msg.textContent = t; msg.style.color = c; msg.style.display = 'inline'; };
+
+  if (!nextPw)              return show('❌ 비밀번호를 입력해 주세요.', 'var(--danger)');
+  if (nextPw.length < 4)   return show('❌ 4자 이상 입력해 주세요.', 'var(--danger)');
+  if (nextPw !== confirmPw) return show('❌ 비밀번호가 일치하지 않습니다.', 'var(--danger)');
+
+  show('저장 중...', 'var(--muted)');
+  const data = await fetchScript({ action: 'setPw', pw: nextPw });
+
+  if (data?.ok) {
+    show('✔ 비밀번호가 설정되었습니다. 다음 접속부터 로그인이 필요합니다.', 'var(--success)');
+    document.getElementById('pw-set-new').value     = '';
+    document.getElementById('pw-set-confirm').value = '';
+    // UI 전환: 설정 → 변경
+    setTimeout(() => {
+      document.getElementById('pw-set-section').style.display    = 'none';
+      document.getElementById('pw-change-section').style.display = 'block';
+      document.getElementById('logout-btn').style.display        = 'inline-flex';
+      msg.style.display = 'none';
+    }, 1500);
+  } else {
+    show(data?.msg ? `❌ ${data.msg}` : '❌ 저장 실패. 구글 시트 URL을 확인해 주세요.', 'var(--danger)');
+  }
+}
+
+// ══ 비밀번호 변경 ══
+async function changePassword() {
+  const current   = document.getElementById('pw-ch-current').value;
+  const nextPw    = document.getElementById('pw-ch-new').value;
+  const confirmPw = document.getElementById('pw-ch-confirm').value;
+  const msg       = document.getElementById('pw-ch-msg');
+  const show = (t, c) => { msg.textContent = t; msg.style.color = c; msg.style.display = 'inline'; };
+
+  if (!nextPw)              return show('❌ 새 비밀번호를 입력해 주세요.', 'var(--danger)');
+  if (nextPw.length < 4)   return show('❌ 4자 이상 입력해 주세요.', 'var(--danger)');
+  if (nextPw !== confirmPw) return show('❌ 새 비밀번호가 일치하지 않습니다.', 'var(--danger)');
+
+  show('저장 중...', 'var(--muted)');
+  const data = await fetchScript({ action: 'changePw', current, next: nextPw });
+
+  if (data?.ok) {
+    show('✔ 변경 완료! 모든 기기에 즉시 적용됩니다.', 'var(--success)');
+    document.getElementById('pw-ch-current').value = '';
+    document.getElementById('pw-ch-new').value     = '';
+    document.getElementById('pw-ch-confirm').value = '';
+  } else {
+    show(data?.msg ? `❌ ${data.msg}` : '❌ 변경 실패. 구글 시트 URL을 확인해 주세요.', 'var(--danger)');
+  }
 }
 
 function saveSheetURL() {
@@ -1216,41 +1372,6 @@ function exportCSV() {
   a.download = `클리닉신청_${new Date().toLocaleDateString('ko-KR')}.csv`;
   a.click();
 }
-
-// ══ 비밀번호 변경 ══
-function changePassword() {
-  const current   = document.getElementById('pw-current').value;
-  const nextPw    = document.getElementById('pw-new').value;
-  const confirmPw = document.getElementById('pw-confirm').value;
-  const msg       = document.getElementById('pw-msg');
-
-  const show = (text, color, persist) => {
-    msg.textContent = text;
-    msg.style.color = color;
-    msg.style.fontWeight = '700';
-    msg.style.display = 'inline';
-    if (!persist) setTimeout(() => msg.style.display = 'none', 3500);
-  };
-
-  if (current !== getAdminPw()) return show('❌ 현재 비밀번호가 올바르지 않습니다.', 'var(--danger)');
-  if (!nextPw)                  return show('❌ 새 비밀번호를 입력해 주세요.', 'var(--danger)');
-  if (nextPw !== confirmPw)     return show('❌ 새 비밀번호가 일치하지 않습니다.', 'var(--danger)');
-  if (nextPw.length < 4)        return show('❌ 비밀번호는 4자 이상이어야 합니다.', 'var(--danger)');
-
-  localStorage.setItem(ADMIN_PW_KEY, nextPw);
-  const saved = localStorage.getItem(ADMIN_PW_KEY);
-
-  if (saved !== nextPw) {
-    return show('❌ 저장 실패: 브라우저 설정을 확인해 주세요.', 'var(--danger)', true);
-  }
-
-  document.getElementById('pw-current').value = '';
-  document.getElementById('pw-new').value = '';
-  document.getElementById('pw-confirm').value = '';
-  show('✔ 변경 완료! 다음 로그인부터 새 비밀번호가 적용됩니다.', 'var(--success)', true);
-}
-
-
 
 // ══ 세부내용 모달 ══
 function showDetail(id) {
