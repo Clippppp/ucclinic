@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>클리닉 신청 플랫폼</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f1e3c;
+    --navy-light: #1a2f5a;
+    --blue: #1d4ed8;
+    --accent: #f59e0b;
+    --accent-light: #fef3c7;
+    --teal: #0d9488;
+    --bg: #f8f9fc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --success: #10b981;
+    --danger: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    color: white;
+    letter-spacing: 0.02em;
+  }
+  .logo-sub {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.5);
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .header-nav {
+    display: flex; gap: 8px;
+  }
+  .nav-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.8);
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--navy);
+    font-weight: 700;
+  }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 60%, #1a3a6b 100%);
+    padding: 60px 2rem 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(245,158,11,0.12) 0%, transparent 60%);
+  }
+  .hero-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--navy);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    color: white;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .hero p {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.95rem;
+    font-weight: 300;
+    max-width: 460px;
+    margin: 0 auto 32px;
+    line-height: 1.7;
+  }
+  .hero-slots {
+    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+    position: relative;
+  }
+  .slot-badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    backdrop-filter: blur(6px);
+  }
+
+  /* ── FORM SECTION ── */
+  .form-section {
+    max-width: 680px;
+    margin: -30px auto 60px;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 2;
+  }
+  .form-card {
+    background: var(--surface);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(15,30,60,0.12);
+    overflow: hidden;
+  }
+  .form-card-header {
+    background: var(--navy);
+    padding: 20px 28px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .form-card-header .icon { font-size: 1.4rem; }
+  .form-card-header h2 {
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .form-card-header p {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.78rem;
+  }
+  .form-body { padding: 28px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-grid.single { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.span2 { grid-column: span 2; }
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 5px;
+  }
+  label .req { color: var(--accent); font-size: 0.9rem; }
+
+  input, select, textarea {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.9rem;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    transition: all 0.2s;
+    outline: none;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--blue);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(29,78,216,0.1);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .time-slot-option { display: none; }
+
+  /* ── SCHEDULE GRID ── */
+  .schedule-grid { width: 100%; }
+  .sch-header-row {
+    display: grid;
+    grid-template-columns: 90px repeat(4, 1fr);
+    gap: 6px; margin-bottom: 6px;
+  }
+  .sch-day-header {
+    text-align: center;
+    font-size: 0.82rem; font-weight: 700;
+    color: var(--navy);
+    padding: 6px 0;
+    background: var(--navy);
+    color: white;
+    border-radius: 8px;
+  }
+  .sch-row {
+    display: grid;
+    grid-template-columns: 90px repeat(4, 1fr);
+    gap: 6px; margin-bottom: 6px;
+  }
+  .sch-block-label {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-end;
+    padding-right: 10px;
+  }
+  .block-name {
+    font-size: 0.78rem; font-weight: 700; color: var(--navy);
+  }
+  .block-time {
+    font-size: 0.68rem; color: var(--muted); margin-top: 1px;
+  }
+  .time-slot-option { display: none; }
+  .sch-cell-label {
+    display: flex; align-items: center; justify-content: center;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.18s;
+    background: var(--bg);
+    font-size: 1.1rem; color: transparent;
+  }
+  .sch-cell-label:hover {
+    border-color: var(--blue); background: #eff6ff;
+    transform: scale(1.05);
+  }
+  .time-slot-option:checked + .sch-cell-label {
+    border-color: var(--blue);
+    background: var(--blue);
+    color: white;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 12px rgba(29,78,216,0.3);
+  }
+
+  .subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+  .subj-opt { display: none; }
+  .subj-label {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px;
+    padding: 10px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    background: var(--bg);
+    text-align: center;
+  }
+  .subj-label:hover { border-color: var(--teal); background: #f0fdfa; }
+  .subj-opt:checked + .subj-label {
+    border-color: var(--teal);
+    background: #f0fdfa;
+    color: var(--teal);
+    font-weight: 700;
+  }
+  .subj-emoji { font-size: 1rem; }
+
+  .label-hint {
+    font-size: 0.72rem; font-weight: 400;
+    color: var(--teal);
+    background: #f0fdfa;
+    padding: 2px 8px; border-radius: 10px;
+    margin-left: 4px;
+  }
+
+  .detail-cell {
+    display: block;
+    background: #fffbeb;
+    border-left: 3px solid var(--accent);
+    padding: 4px 8px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-top: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .submit-btn:hover {
+    background: var(--blue);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(29,78,216,0.3);
+  }
+  .submit-btn:active { transform: translateY(0); }
+
+  /* ── SUCCESS ── */
+  .success-banner {
+    display: none;
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border: 1.5px solid var(--success);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .success-banner.show { display: flex; }
+  .success-banner .icon { font-size: 1.4rem; }
+  .success-banner strong { color: #065f46; font-size: 0.95rem; }
+  .success-banner p { color: #047857; font-size: 0.82rem; margin-top: 3px; }
+
+  /* ── ADMIN ── */
+  .admin-login {
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 0 1.5rem;
+  }
+  .admin-login-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(15,30,60,0.12);
+    padding: 36px 32px;
+    text-align: center;
+  }
+  .admin-login-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .admin-login-card p { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
+  .admin-login-card input {
+    text-align: center;
+    letter-spacing: 0.15em;
+    font-size: 1.1rem;
+  }
+  .login-btn {
+    width: 100%; margin-top: 14px;
+    padding: 12px;
+    background: var(--navy);
+    color: white; border: none;
+    border-radius: 10px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .login-btn:hover { background: var(--blue); }
+  .login-error {
+    color: var(--danger); font-size: 0.8rem; margin-top: 8px;
+    display: none;
+  }
+  .login-error.show { display: block; }
+
+  .admin-panel { padding: 32px 2rem; max-width: 1100px; margin: 0 auto; }
+  .admin-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: gap;
+  }
+  .admin-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem; color: var(--navy);
+  }
+  .admin-header p { color: var(--muted); font-size: 0.85rem; }
+  .admin-actions { display: flex; gap: 10px; }
+  .action-btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    border: none;
+  }
+  .btn-export {
+    background: var(--success); color: white;
+  }
+  .btn-export:hover { opacity: 0.88; }
+  .btn-logout {
+    background: var(--border); color: var(--muted);
+  }
+  .btn-logout:hover { background: #cbd5e1; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: white; border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 12px rgba(15,30,60,0.06);
+  }
+  .stat-card .label {
+    font-size: 0.75rem; font-weight: 700;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .stat-card .value {
+    font-size: 2rem; font-weight: 900;
+    color: var(--navy); margin-top: 4px;
+    font-family: 'DM Serif Display', serif;
+  }
+
+  .filter-bar {
+    display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .filter-bar input, .filter-bar select {
+    max-width: 200px; font-size: 0.83rem; padding: 8px 12px;
+  }
+
+  .table-wrap {
+    background: white; border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(15,30,60,0.06);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--navy); }
+  th {
+    padding: 12px 16px;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.75rem; font-weight: 700;
+    text-align: left; letter-spacing: 0.08em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  td {
+    padding: 12px 16px;
+    font-size: 0.85rem; color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  .badge {
+    display: inline-block; padding: 2px 10px;
+    border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+  }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-teal  { background: #ccfbf1; color: #134e4a; }
+  .del-btn {
+    padding: 4px 10px; background: #fee2e2; color: #b91c1c;
+    border: none; border-radius: 6px; font-size: 0.75rem;
+    cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 700; transition: all 0.2s;
+  }
+  .del-btn:hover { background: #fca5a5; }
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .emoji { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+
+  /* ── DETAIL MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(15,30,60,0.55);
+    backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: white;
+    border-radius: 20px;
+    width: 100%; max-width: 500px;
+    box-shadow: 0 30px 80px rgba(15,30,60,0.3);
+    overflow: hidden;
+    animation: modalIn 0.22s ease;
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.93) translateY(10px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    background: var(--navy);
+    padding: 18px 22px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { color: white; font-size: 1rem; font-weight: 700; }
+  .modal-close {
+    background: rgba(255,255,255,0.15); border: none;
+    color: white; width: 30px; height: 30px; border-radius: 50%;
+    font-size: 1rem; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.3); }
+  .modal-body { padding: 22px; }
+  .modal-meta {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 16px;
+  }
+  .modal-meta-item {
+    background: var(--bg); border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .modal-meta-item .mk { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .modal-meta-item .mv { font-size: 0.9rem; font-weight: 700; color: var(--navy); margin-top: 3px; }
+  .modal-detail-box {
+    background: #fffbeb;
+    border: 1.5px solid var(--accent);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .modal-detail-box .dk {
+    font-size: 0.72rem; font-weight: 700; color: #92400e;
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .modal-detail-box .dv {
+    font-size: 0.9rem; color: var(--text); line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .modal-note-box {
+    background: var(--bg); border-radius: 10px;
+    padding: 12px 14px; font-size: 0.85rem; color: var(--muted);
+  }
+  .clickable-badge {
+    cursor: pointer; transition: all 0.15s;
+    text-decoration: none;
+  }
+  .clickable-badge:hover {
+    filter: brightness(0.92);
+    transform: scale(1.04);
+  }
+
+  /* ── DEPLOY SECTION ── */
+  .deploy-card {
+    background: white; border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 12px rgba(15,30,60,0.06);
+    margin-bottom: 12px;
+  }
+  .deploy-step {
+    display: flex; gap: 12px; margin-top: 12px; align-items: flex-start;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    background: var(--navy); color: white;
+    border-radius: 50%; font-size: 0.75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-text { font-size: 0.84rem; color: var(--text); line-height: 1.6; }
+  .step-text strong { color: var(--navy); }
+  .step-text a { color: var(--blue); text-decoration: none; }
+  .step-text a:hover { text-decoration: underline; }
+  .deploy-tag {
+    display: inline-block; padding: 2px 10px;
+    background: #dbeafe; color: var(--blue);
+    border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .deploy-tag.free { background: #d1fae5; color: #065f46; }
+
+  /* CONFIG SECTION */
+  .config-bar {
+    background: #fffbeb;
+    border: 1.5px dashed var(--accent);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 0.83rem;
+  }
+  .config-bar strong { color: var(--navy); }
+  .config-bar input {
+    background: white; margin-top: 8px;
+    font-size: 0.82rem; padding: 8px 12px;
+  }
+  .config-save {
+    margin-top: 8px; padding: 7px 16px;
+    background: var(--accent); color: var(--navy);
+    border: none; border-radius: 7px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.8rem; font-weight: 700;
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .field.span2 { grid-column: span 1; }
+    .admin-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">📚</div>
+    <div>
+      <div class="logo-text">영어 클리닉</div>
+      <div class="logo-sub">English Clinic Sign-up</div>
+    </div>
+  </div>
+  <div class="header-nav">
+    <button class="nav-btn active" onclick="showView('signup')">📝 신청하기</button>
+    <button class="nav-btn" onclick="showView('admin')">🔐 관리자</button>
+  </div>
+</header>
+
+<!-- ══════════════ 학생 신청 VIEW ══════════════ -->
+<div id="view-signup" class="view active">
+  <div class="hero">
+    <div class="hero-tag">✦ 주중 클리닉 신청</div>
+    <h1>영어 클리닉 신청</h1>
+    <p>원하는 날짜와 시간대를 선택하고<br>신청서를 제출해 주세요.</p>
+    <div class="hero-slots">
+      <span class="slot-badge">📅 월 – 목 운영</span>
+      <span class="slot-badge">🌙 오후반 17:00~19:30</span>
+      <span class="slot-badge">🌃 야간반 19:30~22:00</span>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div id="success-banner" class="success-banner">
+      <div class="icon">✅</div>
+      <div>
+        <strong>신청이 완료되었습니다!</strong>
+        <p>선생님께서 확인 후 연락드릴 예정입니다.</p>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="icon">📋</div>
+        <div>
+          <h2>클리닉 신청서</h2>
+          <p>모든 항목을 정확히 입력해 주세요</p>
+        </div>
+      </div>
+
+      <div class="form-body">
+        <form id="clinicForm" onsubmit="submitForm(event)">
+          <div class="form-grid">
+            <div class="field">
+              <label>이름 <span class="req">*</span></label>
+              <input type="text" id="f-name" placeholder="홍길동" required>
+            </div>
+            <div class="field">
+              <label>학교명 <span class="req">*</span></label>
+              <input type="text" id="f-school" placeholder="○○고등학교" required>
+            </div>
+            <div class="field">
+              <label>학년/반 <span class="req">*</span></label>
+              <select id="f-grade" required>
+                <option value="">선택</option>
+                <option>1학년</option><option>2학년</option><option>3학년</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>연락처 (선택)</label>
+              <input type="tel" id="f-contact" placeholder="010-0000-0000">
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px;">
+            <label>신청 시간대 <span class="req">*</span></label>
+            <div class="time-slots-grid" id="slots-container">
+              <!-- JS로 생성 -->
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px;">
+            <label>클리닉 종류 <span class="req">*</span></label>
+            <div class="subjects-grid" id="subjects-container"></div>
+            <div id="custom-subject-wrap" style="display:none;margin-top:10px;">
+              <input type="text" id="f-custom-subject" placeholder="클리닉 종류를 직접 입력해 주세요" style="font-size:0.88rem;">
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px;">
+            <label>
+              세부 내용 <span class="req">*</span>
+              <span class="label-hint">강사가 실시간으로 확인합니다</span>
+            </label>
+            <textarea id="f-detail" placeholder="예) 2026년 3월 모의고사 20~38번 단어 재시험&#10;예) 수일치 / to부정사 백지노트&#10;예) 능률 WORKBOOK Unit 3~4" required style="min-height:100px;"></textarea>
+          </div>
+
+          <div class="field" style="margin-bottom:20px;">
+            <label>추가 요청사항 <span style="color:var(--muted);font-weight:400;">(선택)</span></label>
+            <textarea id="f-note" placeholder="기타 전달 사항이 있으면 적어주세요."></textarea>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submitBtn">
+            <span>신청서 제출하기</span> <span>→</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 관리자 VIEW ══════════════ -->
+<div id="view-admin" class="view">
+  <!-- 로그인 -->
+  <div id="admin-login-screen" class="admin-login">
+    <div class="admin-login-card">
+      <div style="font-size:2.5rem;margin-bottom:12px;">🔐</div>
+      <h2>관리자 로그인</h2>
+      <p>관리자 비밀번호를 입력해 주세요</p>
+      <input type="password" id="admin-pw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')adminLogin()">
+      <button class="login-btn" onclick="adminLogin()">로그인</button>
+      <div class="login-error" id="login-error">비밀번호가 올바르지 않습니다.</div>
+      <p style="margin-top:16px;font-size:0.75rem;color:var(--muted);">기본 비밀번호: <strong>1234</strong> (하단 설정에서 변경 가능)</p>
+    </div>
+  </div>
+
+  <!-- 대시보드 -->
+  <div id="admin-dashboard" style="display:none;">
+    <div class="admin-panel">
+      <div class="admin-header">
+        <div>
+          <h2>클리닉 신청 관리</h2>
+          <p id="admin-date-label"></p>
+        </div>
+        <div class="admin-actions">
+          <button class="action-btn btn-export" onclick="exportCSV()">📊 CSV 내보내기</button>
+          <button class="action-btn btn-logout" onclick="adminLogout()">로그아웃</button>
+        </div>
+      </div>
+
+      <!-- 구글 시트 연동 설정 -->
+      <div class="config-bar">
+        <strong>🔗 구글 시트 연동 설정</strong>
+        <p style="color:#92400e;margin-top:4px;">Apps Script 웹앱 URL을 입력하면 신청 데이터가 자동으로 구글 시트에 저장됩니다.</p>
+        <input type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/..." style="width:100%;">
+        <br>
+        <button class="config-save" onclick="saveSheetURL()">저장</button>
+        <span id="url-saved" style="font-size:0.8rem;color:var(--success);margin-left:10px;display:none;">✔ 저장됨</span>
+        <p style="margin-top:8px;color:#78350f;font-size:0.75rem;">설정 방법: 페이지 하단 <strong>「구글 시트 연동 방법」</strong> 안내를 참고하세요.</p>
+      </div>
+
+      <div class="stats-row" id="stats-row"></div>
+
+      <div class="filter-bar">
+        <input type="text" id="filter-name" placeholder="이름/학교 검색..." oninput="renderTable()">
+        <select id="filter-day" onchange="renderTable()">
+          <option value="">전체 날짜</option>
+        </select>
+        <select id="filter-subj" onchange="renderTable()">
+          <option value="">전체 과목</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>이름</th><th>학교</th><th>학년</th>
+              <th>신청 시간대</th><th>클리닉 종류</th><th>세부 내용</th><th>연락처</th><th>제출시각</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="data-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 구글 시트 연동 안내 -->
+    <div style="max-width:1100px;margin:0 auto 20px;padding:0 2rem;">
+      <details style="background:white;border-radius:14px;padding:20px 24px;box-shadow:0 2px 12px rgba(15,30,60,0.06);">
+        <summary style="font-weight:700;font-size:0.95rem;cursor:pointer;color:var(--navy);">📋 구글 시트 연동 방법 (클릭하여 펼치기)</summary>
+        <div style="margin-top:16px;font-size:0.85rem;line-height:1.9;color:var(--text);">
+          <ol style="padding-left:20px;">
+            <li>구글 드라이브에서 <strong>새 Google 스프레드시트</strong>를 만듭니다.</li>
+            <li>상단 메뉴 → <strong>확장 프로그램 → Apps Script</strong>를 클릭합니다.</li>
+            <li>아래 코드를 붙여넣고 <strong>저장(Ctrl+S)</strong>합니다:</li>
+          </ol>
+          <pre style="background:#1e293b;color:#e2e8f0;padding:16px;border-radius:10px;margin:12px 0;overflow-x:auto;font-size:0.78rem;line-height:1.6;">
+function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['번호','이름','학교','학년','연락처','신청시간대','클리닉종류','세부내용','추가요청사항','제출시각']);
+  }
+  sheet.appendRow([
+    sheet.getLastRow(),
+    data.name, data.school, data.grade, data.contact,
+    data.timeSlot, data.subject, data.detail, data.note,
+    new Date().toLocaleString('ko-KR')
+  ]);
+  return ContentService
+    .createTextOutput(JSON.stringify({result:'success'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({status:'ok'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+          <ol style="padding-left:20px;" start="4">
+            <li>상단 메뉴 → <strong>배포 → 새 배포</strong>를 클릭합니다.</li>
+            <li>유형: <strong>웹 앱</strong> 선택 → 액세스: <strong>모든 사용자</strong>로 설정합니다.</li>
+            <li>배포 후 생성된 <strong>웹앱 URL</strong>을 복사하여 위 설정창에 붙여넣습니다.</li>
+          </ol>
+        </div>
+      </details>
+    </div>
+
+    <!-- 플랫폼 배포 방법 (학생 공유 링크) -->
+    <div style="max-width:1100px;margin:0 auto 60px;padding:0 2rem;">
+      <details style="background:white;border-radius:14px;padding:20px 24px;box-shadow:0 2px 12px rgba(15,30,60,0.06);">
+        <summary style="font-weight:700;font-size:0.95rem;cursor:pointer;color:var(--navy);">🔗 학생 공유 링크 만들기 — 무료 배포 방법 (클릭하여 펼치기)</summary>
+        <div style="margin-top:16px;">
+          <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">아래 두 가지 방법 중 하나로 HTML 파일을 배포하면 학생들에게 나눌 수 있는 고정 URL이 생깁니다. 두 방법 모두 <strong>완전 무료</strong>입니다.</p>
+
+          <!-- Netlify -->
+          <div class="deploy-card">
+            <div class="deploy-tag free">✦ 추천 · 가장 쉬운 방법</div>
+            <div style="font-weight:700;font-size:0.95rem;color:var(--navy);margin-bottom:4px;">방법 1 — Netlify Drop (드래그 앤 드롭)</div>
+            <div class="deploy-step"><div class="step-num">1</div><div class="step-text"><a href="https://app.netlify.com/drop" target="_blank">app.netlify.com/drop</a> 에 접속합니다.</div></div>
+            <div class="deploy-step"><div class="step-num">2</div><div class="step-text">다운로드한 <strong>clinic-signup.html</strong> 파일을 화면에 <strong>드래그 앤 드롭</strong>합니다.</div></div>
+            <div class="deploy-step"><div class="step-num">3</div><div class="step-text">자동으로 배포되며 <strong>https://랜덤.netlify.app</strong> 형식의 URL이 생성됩니다.</div></div>
+            <div class="deploy-step"><div class="step-num">4</div><div class="step-text">해당 URL을 카카오톡, 문자 등으로 학생들에게 공유합니다. (무료 계정 생성 시 URL 커스텀도 가능)</div></div>
+          </div>
+
+          <!-- GitHub Pages -->
+          <div class="deploy-card">
+            <div class="deploy-tag">GitHub Pages</div>
+            <div style="font-weight:700;font-size:0.95rem;color:var(--navy);margin-bottom:4px;">방법 2 — GitHub Pages</div>
+            <div class="deploy-step"><div class="step-num">1</div><div class="step-text"><a href="https://github.com" target="_blank">github.com</a> 에서 무료 계정을 만들고 <strong>New Repository</strong>를 클릭합니다.</div></div>
+            <div class="deploy-step"><div class="step-num">2</div><div class="step-text">파일명을 <strong>index.html</strong> 로 바꾼 뒤 업로드합니다.</div></div>
+            <div class="deploy-step"><div class="step-num">3</div><div class="step-text">저장소 설정 → <strong>Pages → Source: main branch</strong> 로 설정합니다.</div></div>
+            <div class="deploy-step"><div class="step-num">4</div><div class="step-text"><strong>https://사용자명.github.io/저장소명</strong> 주소로 접속 가능해집니다.</div></div>
+          </div>
+
+          <p style="font-size:0.8rem;color:var(--muted);margin-top:8px;">💡 내용 수정 후에는 파일을 다시 업로드(재배포)하면 반영됩니다.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 세부내용 모달 ══════════════ -->
+<div class="modal-overlay" id="detail-modal" onclick="closeModal(event)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="modal-title">신청 세부 내용</h3>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta" id="modal-meta"></div>
+      <div class="modal-detail-box">
+        <div class="dk">📋 세부 내용</div>
+        <div class="dv" id="modal-detail-text"></div>
+      </div>
+      <div class="modal-note-box" id="modal-note-box" style="display:none;">
+        <strong style="font-size:0.75rem;color:var(--muted);">추가 요청사항</strong>
+        <div id="modal-note-text" style="margin-top:4px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ 설정 데이터 ══
+const TIME_SLOTS = [
+  { day: '월요일', short: '월', time: '17:00 – 19:30', block: 'A' },
+  { day: '월요일', short: '월', time: '19:30 – 22:00', block: 'B' },
+  { day: '화요일', short: '화', time: '17:00 – 19:30', block: 'A' },
+  { day: '화요일', short: '화', time: '19:30 – 22:00', block: 'B' },
+  { day: '수요일', short: '수', time: '17:00 – 19:30', block: 'A' },
+  { day: '수요일', short: '수', time: '19:30 – 22:00', block: 'B' },
+  { day: '목요일', short: '목', time: '17:00 – 19:30', block: 'A' },
+  { day: '목요일', short: '목', time: '19:30 – 22:00', block: 'B' },
+];
+
+const SUBJECTS = [
+  { value: '재시험', emoji: '📝' },
+  { value: '백지노트', emoji: '📄' },
+  { value: 'DEPTH&WORKBOOK', emoji: '📖' },
+  { value: '문제풀이', emoji: '✏️' },
+  { value: '기타', emoji: '💬', custom: true },
+];
+
+const ADMIN_PW_KEY = 'clinic_admin_pw';
+const SHEETS_URL_KEY = 'clinic_sheets_url';
+const DATA_KEY = 'clinic_submissions';
+
+function getAdminPw() { return localStorage.getItem(ADMIN_PW_KEY) || '1234'; }
+function getSheetURL() { return localStorage.getItem(SHEETS_URL_KEY) || ''; }
+function getData() { return JSON.parse(localStorage.getItem(DATA_KEY) || '[]'); }
+function saveData(d) { localStorage.setItem(DATA_KEY, JSON.stringify(d)); }
+
+// ══ 뷰 전환 ══
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  event && event.target && event.target.classList.add('active');
+  if (v === 'admin') initAdminView();
+}
+
+// ══ 시간대 / 과목 렌더 ══
+function renderOptions() {
+  // 시간대: 요일별 컬럼 × 블록별 행 (스케줄 그리드)
+  const sc = document.getElementById('slots-container');
+  const days = ['월요일','화요일','수요일','목요일'];
+  const blocks = [
+    { label: '오후반', time: '17:00 – 19:30' },
+    { label: '야간반', time: '19:30 – 22:00' },
+  ];
+
+  let html = `<div class="schedule-grid">
+    <div class="sch-header-row">
+      <div class="sch-block-label"></div>
+      ${days.map(d => `<div class="sch-day-header">${d.replace('요일','')}</div>`).join('')}
+    </div>`;
+
+  blocks.forEach((block, bi) => {
+    html += `<div class="sch-row">
+      <div class="sch-block-label">
+        <span class="block-name">${block.label}</span>
+        <span class="block-time">${block.time}</span>
+      </div>`;
+    days.forEach(day => {
+      const idx = TIME_SLOTS.findIndex(s => s.day === day && s.block === (bi === 0 ? 'A' : 'B'));
+      const s = TIME_SLOTS[idx];
+      html += `
+        <div>
+          <input type="radio" name="timeSlot" id="ts${idx}" class="time-slot-option" value="${s.day} ${s.time}" required>
+          <label for="ts${idx}" class="sch-cell-label">
+            <span class="sch-check">✓</span>
+          </label>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div>`;
+  sc.innerHTML = html;
+
+  // 과목
+  const subj = document.getElementById('subjects-container');
+  subj.innerHTML = SUBJECTS.map((s, i) => `
+    <div>
+      <input type="radio" name="subject" id="sj${i}" class="subj-opt" value="${s.value}"
+        onchange="onSubjectChange('${s.value}')" required>
+      <label for="sj${i}" class="subj-label">
+        <span class="subj-emoji">${s.emoji}</span>
+        <span>${s.value}</span>
+      </label>
+    </div>`).join('');
+}
+
+function onSubjectChange(val) {
+  const wrap = document.getElementById('custom-subject-wrap');
+  wrap.style.display = val === '기타' ? 'block' : 'none';
+  if (val !== '기타') document.getElementById('f-custom-subject').value = '';
+}
+
+// ══ 폼 제출 ══
+async function submitForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>제출 중...</span>';
+
+  const rawSubject = document.querySelector('input[name="subject"]:checked')?.value || '';
+  const customSubject = document.getElementById('f-custom-subject').value.trim();
+  const finalSubject = rawSubject === '기타' ? `기타: ${customSubject || '(미입력)'}` : rawSubject;
+
+  const entry = {
+    id: Date.now(),
+    name: document.getElementById('f-name').value.trim(),
+    school: document.getElementById('f-school').value.trim(),
+    grade: document.getElementById('f-grade').value,
+    contact: document.getElementById('f-contact').value.trim(),
+    timeSlot: document.querySelector('input[name="timeSlot"]:checked')?.value || '',
+    subject: finalSubject,
+    detail: document.getElementById('f-detail').value.trim(),
+    note: document.getElementById('f-note').value.trim(),
+    submittedAt: new Date().toLocaleString('ko-KR'),
+  };
+
+  // 로컬 저장
+  const data = getData();
+  data.push(entry);
+  saveData(data);
+
+  // 구글 시트 전송 (설정된 경우)
+  const url = getSheetURL();
+  if (url) {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(entry),
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'no-cors',
+      });
+    } catch (err) { console.warn('시트 전송 실패:', err); }
+  }
+
+  // 성공 표시
+  document.getElementById('success-banner').classList.add('show');
+  document.getElementById('clinicForm').reset();
+  btn.disabled = false;
+  btn.innerHTML = '<span>신청서 제출하기</span><span>→</span>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══ 관리자 ══
+function initAdminView() {
+  const loggedIn = sessionStorage.getItem('clinic_admin_auth');
+  document.getElementById('admin-login-screen').style.display = loggedIn ? 'none' : 'block';
+  document.getElementById('admin-dashboard').style.display = loggedIn ? 'block' : 'none';
+  if (loggedIn) loadDashboard();
+}
+
+function adminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === getAdminPw()) {
+    sessionStorage.setItem('clinic_admin_auth', '1');
+    document.getElementById('admin-login-screen').style.display = 'none';
+    document.getElementById('admin-dashboard').style.display = 'block';
+    document.getElementById('login-error').classList.remove('show');
+    loadDashboard();
+  } else {
+    document.getElementById('login-error').classList.add('show');
+  }
+}
+
+function adminLogout() {
+  sessionStorage.removeItem('clinic_admin_auth');
+  document.getElementById('admin-login-screen').style.display = 'block';
+  document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('admin-pw').value = '';
+}
+
+function saveSheetURL() {
+  const url = document.getElementById('sheets-url').value.trim();
+  localStorage.setItem(SHEETS_URL_KEY, url);
+  const saved = document.getElementById('url-saved');
+  saved.style.display = 'inline';
+  setTimeout(() => saved.style.display = 'none', 2000);
+}
+
+function loadDashboard() {
+  document.getElementById('admin-date-label').textContent =
+    '오늘: ' + new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+
+  // 저장된 URL 복원
+  const url = getSheetURL();
+  if (url) document.getElementById('sheets-url').value = url;
+
+  // 필터 옵션 채우기
+  const data = getData();
+  const days = [...new Set(data.map(r => r.timeSlot?.split(' ').slice(0,1)[0]))].filter(Boolean);
+  const subjs = [...new Set(data.map(r => r.subject))].filter(Boolean);
+
+  const fd = document.getElementById('filter-day');
+  fd.innerHTML = '<option value="">전체 날짜</option>';
+  days.forEach(d => fd.innerHTML += `<option>${d}</option>`);
+
+  const fs = document.getElementById('filter-subj');
+  fs.innerHTML = '<option value="">전체 과목</option>';
+  subjs.forEach(s => fs.innerHTML += `<option>${s}</option>`);
+
+  renderStats(data);
+  renderTable();
+}
+
+function renderStats(data) {
+  const schools = new Set(data.map(r => r.school)).size;
+  const today = new Date().toLocaleDateString('ko-KR');
+  const todayCount = data.filter(r => r.submittedAt?.startsWith(today.replace('. ','.').replace('. ','.'))).length;
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="label">전체 신청</div><div class="value">${data.length}</div></div>
+    <div class="stat-card"><div class="label">참여 학교</div><div class="value">${schools}</div></div>
+    <div class="stat-card"><div class="label">오늘 신청</div><div class="value">${todayCount}</div></div>
+  `;
+}
+
+function renderTable() {
+  const nameQ = document.getElementById('filter-name').value.toLowerCase();
+  const dayQ  = document.getElementById('filter-day').value;
+  const subjQ = document.getElementById('filter-subj').value;
+  let data = getData().filter(r =>
+    (!nameQ || r.name?.toLowerCase().includes(nameQ) || r.school?.toLowerCase().includes(nameQ)) &&
+    (!dayQ  || r.timeSlot?.startsWith(dayQ)) &&
+    (!subjQ || r.subject === subjQ)
+  );
+
+  const colors = ['badge-blue','badge-green','badge-amber','badge-teal','badge-purple'];
+  const subjColor = { '재시험':'badge-blue','백지노트':'badge-green','DEPTH&WORKBOOK':'badge-amber','문제풀이':'badge-teal' };
+
+  const tbody = document.getElementById('data-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><span class="emoji">📭</span>신청 내역이 없습니다.</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map((r, i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:0.75rem;">${i+1}</td>
+      <td><strong>${r.name || '-'}</strong></td>
+      <td>${r.school || '-'}</td>
+      <td>${r.grade || '-'}</td>
+      <td><span class="badge badge-blue">${r.timeSlot || '-'}</span></td>
+      <td>
+        <span class="badge clickable-badge ${subjColor[r.subject?.split(':')[0].trim()] || 'badge-teal'}"
+          onclick="showDetail(${r.id})" title="클릭하여 세부 내용 보기">
+          ${r.subject || '-'} 🔍
+        </span>
+      </td>
+      <td style="font-size:0.83rem;max-width:200px;">
+        ${r.detail
+          ? `<span class="detail-cell" style="cursor:pointer;" onclick="showDetail(${r.id})">${r.detail.length > 40 ? r.detail.slice(0,40)+'…' : r.detail}</span>`
+          : '<span style="color:var(--muted)">-</span>'}
+      </td>
+      <td style="color:var(--muted);font-size:0.8rem;">${r.contact || '-'}</td>
+      <td style="color:var(--muted);font-size:0.75rem;white-space:nowrap;">${r.submittedAt || '-'}</td>
+      <td><button class="del-btn" onclick="deleteEntry(${r.id})">삭제</button></td>
+    </tr>
+  `).join('');
+}
+
+function deleteEntry(id) {
+  if (!confirm('이 신청을 삭제할까요?')) return;
+  saveData(getData().filter(r => r.id !== id));
+  loadDashboard();
+}
+
+function exportCSV() {
+  const data = getData();
+  if (!data.length) { alert('내보낼 데이터가 없습니다.'); return; }
+  const headers = ['이름','학교','학년','연락처','신청시간대','클리닉종류','세부내용','추가요청사항','제출시각'];
+  const rows = data.map(r =>
+    [r.name, r.school, r.grade, r.contact, r.timeSlot, r.subject, r.detail, r.note, r.submittedAt]
+    .map(v => `"${(v||'').replace(/"/g,'""')}"`)
+  );
+  const csv = '\uFEFF' + [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `클리닉신청_${new Date().toLocaleDateString('ko-KR')}.csv`;
+  a.click();
+}
+
+// ══ 세부내용 모달 ══
+function showDetail(id) {
+  const r = getData().find(d => d.id === id);
+  if (!r) return;
+
+  document.getElementById('modal-title').textContent =
+    `${r.name} · ${r.school} ${r.grade}`;
+
+  document.getElementById('modal-meta').innerHTML = `
+    <div class="modal-meta-item">
+      <div class="mk">신청 시간대</div>
+      <div class="mv">${r.timeSlot || '-'}</div>
+    </div>
+    <div class="modal-meta-item">
+      <div class="mk">클리닉 종류</div>
+      <div class="mv">${r.subject || '-'}</div>
+    </div>
+    <div class="modal-meta-item">
+      <div class="mk">연락처</div>
+      <div class="mv">${r.contact || '-'}</div>
+    </div>
+    <div class="modal-meta-item">
+      <div class="mk">제출 시각</div>
+      <div class="mv" style="font-size:0.78rem;">${r.submittedAt || '-'}</div>
+    </div>`;
+
+  document.getElementById('modal-detail-text').textContent =
+    r.detail || '(세부 내용 없음)';
+
+  const noteBox = document.getElementById('modal-note-box');
+  if (r.note) {
+    noteBox.style.display = 'block';
+    document.getElementById('modal-note-text').textContent = r.note;
+  } else {
+    noteBox.style.display = 'none';
+  }
+
+  document.getElementById('detail-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetailModal() {
+  document.getElementById('detail-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('detail-modal')) closeDetailModal();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDetailModal();
+});
+
+// ══ 초기화 ══
+renderOptions();
+</script>
+</body>
+</html>
