@@ -642,7 +642,7 @@
   <div class="logo">
     <div class="logo-icon">📚</div>
     <div>
-      <div class="logo-text">UNDERDOG CO. CLINIC</div>
+      <div class="logo-text">UNDERDOG Co. CLINIC</div>
       <div class="logo-sub">English Clinic Sign-up</div>
     </div>
   </div>
@@ -662,6 +662,7 @@
       <span class="slot-badge">📅 월 – 목요일</span>
       <span class="slot-badge">🌙 앞 시간 17:00~19:30</span>
       <span class="slot-badge">🌃 뒷 시간 19:30~22:00</span>
+      <span class="slot-badge">😴 심야 시간 22:00~23:30</span>
     </div>
   </div>
 
@@ -687,7 +688,7 @@
           <div class="form-grid">
             <div class="field">
               <label>이름 <span class="req">*</span></label>
-              <input type="text" id="f-name" placeholder="홍길동" required>
+              <input type="text" id="f-name" placeholder="고길동" required>
             </div>
             <div class="field">
               <label>학교명 <span class="req">*</span></label>
@@ -724,9 +725,9 @@
           <div class="field" style="margin-bottom:16px;">
             <label>
               세부 내용 <span class="req">*</span>
-              <span class="label-hint">쌤이 직접 볼 거예요.</span>
+              <span class="label-hint">쌤이 직접 보러 다닐 거예요.</span>
             </label>
-            <textarea id="f-detail" placeholder="예) 2026년 3월 모의고사 20~38번 단어 재시험 "min-height:100px;"></textarea>
+            <textarea id="f-detail" placeholder="예) 2026년 3월 모의고사 20~38번 단어 재시험"min-height:100px;"></textarea>
           </div>
 
           <div class="field" style="margin-bottom:20px;">
@@ -742,6 +743,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- ══════════════ 관리자 VIEW ══════════════ -->
 <div id="view-admin" class="view">
@@ -777,13 +779,10 @@
 
       <!-- 구글 시트 연동 설정 -->
       <div class="config-bar">
-        <strong>🔗 구글 시트 연동 설정</strong>
-        <p style="color:#92400e;margin-top:4px;">Apps Script 웹앱 URL을 입력하면 신청 데이터가 자동으로 구글 시트에 저장됩니다.</p>
-        <input type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/..." style="width:100%;">
-        <br>
-        <button class="config-save" onclick="saveSheetURL()">저장</button>
-        <span id="url-saved" style="font-size:0.8rem;color:var(--success);margin-left:10px;display:none;">✔ 저장됨</span>
-        <p style="margin-top:8px;color:#78350f;font-size:0.75rem;">설정 방법: 페이지 하단 「구글 시트 연동 방법」 안내를 참고하세요.</p>
+        <strong>🔗 구글 시트 연동</strong>
+        <p style="color:#92400e;margin-top:4px;">현재 연동된 Apps Script URL (HTML 파일의 <code>SCRIPT_URL</code> 상수로 설정됩니다)</p>
+        <input type="text" id="sheets-url" readonly style="width:100%;background:#fff8e1;cursor:default;color:#92400e;font-size:0.8rem;">
+        <p style="margin-top:8px;color:#78350f;font-size:0.75rem;">URL 변경 시 HTML 파일의 <strong>const SCRIPT_URL = '...'</strong> 값을 수정 후 재배포하세요.</p>
       </div>
 
       <!-- 비밀번호 관리 카드 -->
@@ -863,35 +862,56 @@
           <pre style="background:#1e293b;color:#e2e8f0;padding:16px;border-radius:10px;margin:12px 0;overflow-x:auto;font-size:0.78rem;line-height:1.6;">
 function doPost(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
+  var data  = JSON.parse(e.postData.contents);
+
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['번호','이름','학교','학년','연락처','신청시간대','클리닉종류','세부내용','추가요청사항','제출시각']);
+    sheet.appendRow(['ID','이름','학교','학년','연락처','신청시간대','클리닉종류','세부내용','추가요청사항','제출시각']);
   }
   sheet.appendRow([
-    sheet.getLastRow(),
-    data.name, data.school, data.grade, data.contact,
-    data.timeSlot, data.subject, data.detail, data.note,
-    new Date().toLocaleString('ko-KR')
+    data.id, data.name, data.school, data.grade, data.contact,
+    data.timeSlot, data.subject, data.detail, data.note, data.submittedAt
   ]);
-  return json({result:'success'});
+  return json({ result: 'success' });
 }
 
 function doGet(e) {
-  var props = PropertiesService.getScriptProperties();
-  var stored = props.getProperty('ADMIN_PW');           // null이면 미설정
+  var props  = PropertiesService.getScriptProperties();
+  var stored = props.getProperty('ADMIN_PW');
   var action = e.parameter.action;
 
-  if (action === 'checkPw') {
-    // 비밀번호 설정 여부만 반환 (비밀번호 자체는 노출 안 함)
-    return json({ hasPw: !!stored });
+  // ── 신청 목록 반환 ──
+  if (action === 'getSubmissions') {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var rows  = sheet.getDataRange().getValues();
+    if (rows.length <= 1) return json({ data: [] });
+    var keys = ['id','name','school','grade','contact','timeSlot','subject','detail','note','submittedAt'];
+    var result = rows.slice(1).map(function(row) {
+      var obj = {};
+      keys.forEach(function(k, i) { obj[k] = row[i] ? row[i].toString() : ''; });
+      return obj;
+    });
+    return json({ data: result });
   }
-  if (action === 'verifyPw') {
-    if (!stored) return json({ ok: true });              // 미설정 = 항상 통과
-    return json({ ok: e.parameter.pw === stored });
+
+  // ── 행 삭제 ──
+  if (action === 'deleteEntry') {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var id    = e.parameter.id;
+    var rows  = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i][0].toString() === id) {
+        sheet.deleteRow(i + 1);
+        return json({ ok: true });
+      }
+    }
+    return json({ ok: false, msg: '해당 항목을 찾을 수 없습니다.' });
   }
+
+  // ── 비밀번호 관련 ──
+  if (action === 'checkPw')  return json({ hasPw: !!stored });
+  if (action === 'verifyPw') return json({ ok: !stored || e.parameter.pw === stored });
   if (action === 'setPw') {
     if (stored) return json({ ok: false, msg: '이미 비밀번호가 설정되어 있습니다.' });
-    if (!e.parameter.pw) return json({ ok: false, msg: '비밀번호를 입력해 주세요.' });
     props.setProperty('ADMIN_PW', e.parameter.pw);
     return json({ ok: true });
   }
@@ -900,7 +920,8 @@ function doGet(e) {
     props.setProperty('ADMIN_PW', e.parameter.next);
     return json({ ok: true });
   }
-  return json({ status: 'ok', hasPw: !!stored });
+
+  return json({ status: 'ok' });
 }
 
 function json(obj) {
@@ -972,7 +993,13 @@ function json(obj) {
 </div>
 
 <script>
-// ══ 설정 데이터 ══
+// ════════════════════════════════════════════════
+//  ★ Apps Script URL을 아래에 입력하세요 ★
+//  GitHub에 올리기 전 반드시 채워넣어야 합니다.
+// ════════════════════════════════════════════════
+const SCRIPT_URL = '';   // ← 여기에 붙여넣기
+
+// ── 설정 데이터 ──
 const TIME_SLOTS = [
   { day: '월요일', short: '월', time: '17:00 – 19:30', block: 'A' },
   { day: '월요일', short: '월', time: '19:30 – 22:00', block: 'B' },
@@ -992,12 +1019,32 @@ const SUBJECTS = [
   { value: '기타', emoji: '💬', custom: true },
 ];
 
-const SHEETS_URL_KEY = 'clinic_sheets_url';
-const DATA_KEY = 'clinic_submissions';
+// ── 서버 통신 헬퍼 (GET) ──
+async function fetchScript(params, timeoutMs = 8000) {
+  if (!SCRIPT_URL) return null;
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const qs  = new URLSearchParams(params).toString();
+    const res = await fetch(`${SCRIPT_URL}?${qs}`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    return JSON.parse(await res.text());
+  } catch (_) { clearTimeout(timer); return null; }
+}
 
-function getSheetURL() { return localStorage.getItem(SHEETS_URL_KEY) || ''; }
-function getData() { return JSON.parse(localStorage.getItem(DATA_KEY) || '[]'); }
-function saveData(d) { localStorage.setItem(DATA_KEY, JSON.stringify(d)); }
+// ── 서버 통신 헬퍼 (POST) ──
+async function postScript(body) {
+  if (!SCRIPT_URL) return null;
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      mode: 'no-cors',   // CORS 우회 (Apps Script 특성)
+    });
+    return true;
+  } catch (_) { return null; }
+}
 
 // ══ 뷰 전환 ══
 function showView(v) {
@@ -1069,89 +1116,53 @@ function onSubjectChange(val) {
 async function submitForm(e) {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
+
+  if (!SCRIPT_URL) {
+    alert('서버 연결이 설정되지 않았습니다.\n관리자에게 문의해 주세요.');
+    return;
+  }
+
   btn.disabled = true;
   btn.innerHTML = '<span>제출 중...</span>';
 
-  const rawSubject = document.querySelector('input[name="subject"]:checked')?.value || '';
+  const rawSubject    = document.querySelector('input[name="subject"]:checked')?.value || '';
   const customSubject = document.getElementById('f-custom-subject').value.trim();
-  const finalSubject = rawSubject === '기타' ? `기타: ${customSubject || '(미입력)'}` : rawSubject;
+  const finalSubject  = rawSubject === '기타' ? `기타: ${customSubject || '(미입력)'}` : rawSubject;
 
   const entry = {
-    id: Date.now(),
-    name: document.getElementById('f-name').value.trim(),
-    school: document.getElementById('f-school').value.trim(),
-    grade: document.getElementById('f-grade').value,
-    contact: document.getElementById('f-contact').value.trim(),
-    timeSlot: document.querySelector('input[name="timeSlot"]:checked')?.value || '',
-    subject: finalSubject,
-    detail: document.getElementById('f-detail').value.trim(),
-    note: document.getElementById('f-note').value.trim(),
+    id: Date.now().toString(),
+    name:      document.getElementById('f-name').value.trim(),
+    school:    document.getElementById('f-school').value.trim(),
+    grade:     document.getElementById('f-grade').value,
+    contact:   document.getElementById('f-contact').value.trim(),
+    timeSlot:  document.querySelector('input[name="timeSlot"]:checked')?.value || '',
+    subject:   finalSubject,
+    detail:    document.getElementById('f-detail').value.trim(),
+    note:      document.getElementById('f-note').value.trim(),
     submittedAt: new Date().toLocaleString('ko-KR'),
   };
 
-  // 로컬 저장
-  const data = getData();
-  data.push(entry);
-  saveData(data);
+  await postScript(entry);
 
-  // 구글 시트 전송 (설정된 경우)
-  const url = getSheetURL();
-  if (url) {
-    try {
-      await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify(entry),
-        headers: { 'Content-Type': 'application/json' },
-        mode: 'no-cors',
-      });
-    } catch (err) { console.warn('시트 전송 실패:', err); }
-  }
-
-  // 성공 표시
   document.getElementById('success-banner').classList.add('show');
   document.getElementById('clinicForm').reset();
+  onSubjectChange('');
   btn.disabled = false;
   btn.innerHTML = '<span>신청서 제출하기</span><span>→</span>';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ══ 관리자 ══
-// ══ Apps Script 안전 요청 헬퍼 ══
-// 어떤 에러가 나도 null 반환, 절대 throw 안 함
-async function fetchScript(params, timeoutMs = 7000) {
-  const url = getSheetURL();
-  if (!url) return null;
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const qs  = new URLSearchParams(params).toString();
-    const res = await fetch(`${url}?${qs}`, { signal: ctrl.signal });
-    clearTimeout(timer);
-    const text = await res.text();
-    return JSON.parse(text);
-  } catch (_) {
-    clearTimeout(timer);
-    return null;
-  }
-}
-
 // ══ 관리자 진입 ══
 async function initAdminView() {
-  // Apps Script URL이 없으면 → 바로 대시보드
-  const url = getSheetURL();
-  if (!url) {
+  if (!SCRIPT_URL) {
+    // URL 미설정: 설정 안내만 보여주기
     showDashboard(false);
     return;
   }
-
-  // 서버에 비밀번호 설정 여부 확인
   const data = await fetchScript({ action: 'checkPw' });
-
   if (!data || !data.hasPw) {
-    // 비밀번호 미설정 or 서버 응답 없음 → 바로 대시보드
     showDashboard(false);
   } else {
-    // 비밀번호 있음 → 이미 로그인된 세션인지 확인
     if (sessionStorage.getItem('clinic_admin_auth') === '1') {
       showDashboard(true);
     } else {
@@ -1168,10 +1179,8 @@ function showLoginScreen() {
 function showDashboard(hasPassword) {
   document.getElementById('admin-login-screen').style.display = 'none';
   document.getElementById('admin-dashboard').style.display   = 'block';
-  // 비밀번호 없으면 설정 섹션, 있으면 변경 섹션 표시
   const card = document.getElementById('pw-mgmt-card');
-  const url  = getSheetURL();
-  if (url) {
+  if (SCRIPT_URL) {
     card.style.display = 'block';
     document.getElementById('pw-set-section').style.display    = hasPassword ? 'none'  : 'block';
     document.getElementById('pw-change-section').style.display = hasPassword ? 'block' : 'none';
@@ -1262,26 +1271,33 @@ async function changePassword() {
   }
 }
 
-function saveSheetURL() {
-  const url = document.getElementById('sheets-url').value.trim();
-  localStorage.setItem(SHEETS_URL_KEY, url);
-  const saved = document.getElementById('url-saved');
-  saved.style.display = 'inline';
-  setTimeout(() => saved.style.display = 'none', 2000);
-}
+// ── 현재 로드된 데이터 캐시 ──
+let _cachedData = [];
 
-function loadDashboard() {
+async function loadDashboard() {
   document.getElementById('admin-date-label').textContent =
     '오늘: ' + new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
 
-  // 저장된 URL 복원
-  const url = getSheetURL();
-  if (url) document.getElementById('sheets-url').value = url;
+  // URL 표시
+  document.getElementById('sheets-url').value = SCRIPT_URL || '(미설정)';
 
-  // 필터 옵션 채우기
-  const data = getData();
-  const days = [...new Set(data.map(r => r.timeSlot?.split(' ').slice(0,1)[0]))].filter(Boolean);
-  const subjs = [...new Set(data.map(r => r.subject))].filter(Boolean);
+  if (!SCRIPT_URL) {
+    _cachedData = [];
+    renderStats([]);
+    renderTable();
+    return;
+  }
+
+  // 서버에서 데이터 가져오기
+  document.getElementById('data-tbody').innerHTML =
+    `<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--muted);">불러오는 중...</td></tr>`;
+
+  const res = await fetchScript({ action: 'getSubmissions' });
+  _cachedData = res?.data || [];
+
+  // 필터 옵션 갱신
+  const days  = [...new Set(_cachedData.map(r => r.timeSlot?.split(' ')[0]))].filter(Boolean);
+  const subjs = [...new Set(_cachedData.map(r => r.subject))].filter(Boolean);
 
   const fd = document.getElementById('filter-day');
   fd.innerHTML = '<option value="">전체 날짜</option>';
@@ -1291,19 +1307,21 @@ function loadDashboard() {
   fs.innerHTML = '<option value="">전체 과목</option>';
   subjs.forEach(s => fs.innerHTML += `<option>${s}</option>`);
 
-  renderStats(data);
+  renderStats(_cachedData);
   renderTable();
 }
 
 function renderStats(data) {
-  const schools = new Set(data.map(r => r.school)).size;
-  const today = new Date().toLocaleDateString('ko-KR');
-  const todayCount = data.filter(r => r.submittedAt?.startsWith(today.replace('. ','.').replace('. ','.'))).length;
-
+  const schools    = new Set(data.map(r => r.school)).size;
+  const todayStr   = new Date().toLocaleDateString('ko-KR');
+  const todayCount = data.filter(r => r.submittedAt?.includes(todayStr.replace(/\. /g,'.'))).length;
   document.getElementById('stats-row').innerHTML = `
     <div class="stat-card"><div class="label">전체 신청</div><div class="value">${data.length}</div></div>
     <div class="stat-card"><div class="label">참여 학교</div><div class="value">${schools}</div></div>
     <div class="stat-card"><div class="label">오늘 신청</div><div class="value">${todayCount}</div></div>
+    <div class="stat-card" style="cursor:pointer;" onclick="loadDashboard()" title="새로고침">
+      <div class="label">새로고침</div><div class="value" style="font-size:1.5rem;">🔄</div>
+    </div>
   `;
 }
 
@@ -1311,16 +1329,15 @@ function renderTable() {
   const nameQ = document.getElementById('filter-name').value.toLowerCase();
   const dayQ  = document.getElementById('filter-day').value;
   const subjQ = document.getElementById('filter-subj').value;
-  let data = getData().filter(r =>
+  const data  = _cachedData.filter(r =>
     (!nameQ || r.name?.toLowerCase().includes(nameQ) || r.school?.toLowerCase().includes(nameQ)) &&
     (!dayQ  || r.timeSlot?.startsWith(dayQ)) &&
     (!subjQ || r.subject === subjQ)
   );
 
-  const colors = ['badge-blue','badge-green','badge-amber','badge-teal','badge-purple'];
   const subjColor = { '재시험':'badge-blue','백지노트':'badge-green','DEPTH&WORKBOOK':'badge-amber','문제풀이':'badge-teal' };
-
   const tbody = document.getElementById('data-tbody');
+
   if (!data.length) {
     tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><span class="emoji">📭</span>신청 내역이 없습니다.</div></td></tr>`;
     return;
@@ -1329,87 +1346,61 @@ function renderTable() {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td style="color:var(--muted);font-size:0.75rem;">${i+1}</td>
-      <td><strong>${r.name || '-'}</strong></td>
-      <td>${r.school || '-'}</td>
-      <td>${r.grade || '-'}</td>
-      <td><span class="badge badge-blue">${r.timeSlot || '-'}</span></td>
+      <td><strong>${r.name||'-'}</strong></td>
+      <td>${r.school||'-'}</td>
+      <td>${r.grade||'-'}</td>
+      <td><span class="badge badge-blue">${r.timeSlot||'-'}</span></td>
       <td>
-        <span class="badge clickable-badge ${subjColor[r.subject?.split(':')[0].trim()] || 'badge-teal'}"
-          onclick="showDetail(${r.id})" title="클릭하여 세부 내용 보기">
-          ${r.subject || '-'} 🔍
+        <span class="badge clickable-badge ${subjColor[r.subject?.split(':')[0].trim()]||'badge-teal'}"
+          onclick="showDetail('${r.id}')" title="클릭하여 세부 내용 보기">
+          ${r.subject||'-'} 🔍
         </span>
       </td>
       <td style="font-size:0.83rem;max-width:200px;">
         ${r.detail
-          ? `<span class="detail-cell" style="cursor:pointer;" onclick="showDetail(${r.id})">${r.detail.length > 40 ? r.detail.slice(0,40)+'…' : r.detail}</span>`
+          ? `<span class="detail-cell" style="cursor:pointer;" onclick="showDetail('${r.id}')">${r.detail.length>40?r.detail.slice(0,40)+'…':r.detail}</span>`
           : '<span style="color:var(--muted)">-</span>'}
       </td>
-      <td style="color:var(--muted);font-size:0.8rem;">${r.contact || '-'}</td>
-      <td style="color:var(--muted);font-size:0.75rem;white-space:nowrap;">${r.submittedAt || '-'}</td>
-      <td><button class="del-btn" onclick="deleteEntry(${r.id})">삭제</button></td>
-    </tr>
-  `).join('');
+      <td style="color:var(--muted);font-size:0.8rem;">${r.contact||'-'}</td>
+      <td style="color:var(--muted);font-size:0.75rem;white-space:nowrap;">${r.submittedAt||'-'}</td>
+      <td><button class="del-btn" onclick="deleteEntry('${r.id}')">삭제</button></td>
+    </tr>`).join('');
 }
 
-function deleteEntry(id) {
+async function deleteEntry(id) {
   if (!confirm('이 신청을 삭제할까요?')) return;
-  saveData(getData().filter(r => r.id !== id));
-  loadDashboard();
+  await fetchScript({ action: 'deleteEntry', id });
+  await loadDashboard();
 }
 
-function exportCSV() {
-  const data = getData();
-  if (!data.length) { alert('내보낼 데이터가 없습니다.'); return; }
+async function exportCSV() {
+  if (!_cachedData.length) { alert('내보낼 데이터가 없습니다.'); return; }
   const headers = ['이름','학교','학년','연락처','신청시간대','클리닉종류','세부내용','추가요청사항','제출시각'];
-  const rows = data.map(r =>
-    [r.name, r.school, r.grade, r.contact, r.timeSlot, r.subject, r.detail, r.note, r.submittedAt]
+  const rows = _cachedData.map(r =>
+    [r.name,r.school,r.grade,r.contact,r.timeSlot,r.subject,r.detail,r.note,r.submittedAt]
     .map(v => `"${(v||'').replace(/"/g,'""')}"`)
   );
-  const csv = '\uFEFF' + [headers, ...rows].map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  const csv  = '\uFEFF' + [headers,...rows].map(r=>r.join(',')).join('\n');
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
   a.download = `클리닉신청_${new Date().toLocaleDateString('ko-KR')}.csv`;
   a.click();
 }
 
 // ══ 세부내용 모달 ══
 function showDetail(id) {
-  const r = getData().find(d => d.id === id);
+  const r = _cachedData.find(d => d.id === id);
   if (!r) return;
-
-  document.getElementById('modal-title').textContent =
-    `${r.name} · ${r.school} ${r.grade}`;
-
+  document.getElementById('modal-title').textContent = `${r.name} · ${r.school} ${r.grade}`;
   document.getElementById('modal-meta').innerHTML = `
-    <div class="modal-meta-item">
-      <div class="mk">신청 시간대</div>
-      <div class="mv">${r.timeSlot || '-'}</div>
-    </div>
-    <div class="modal-meta-item">
-      <div class="mk">클리닉 종류</div>
-      <div class="mv">${r.subject || '-'}</div>
-    </div>
-    <div class="modal-meta-item">
-      <div class="mk">연락처</div>
-      <div class="mv">${r.contact || '-'}</div>
-    </div>
-    <div class="modal-meta-item">
-      <div class="mk">제출 시각</div>
-      <div class="mv" style="font-size:0.78rem;">${r.submittedAt || '-'}</div>
-    </div>`;
-
-  document.getElementById('modal-detail-text').textContent =
-    r.detail || '(세부 내용 없음)';
-
+    <div class="modal-meta-item"><div class="mk">신청 시간대</div><div class="mv">${r.timeSlot||'-'}</div></div>
+    <div class="modal-meta-item"><div class="mk">클리닉 종류</div><div class="mv">${r.subject||'-'}</div></div>
+    <div class="modal-meta-item"><div class="mk">연락처</div><div class="mv">${r.contact||'-'}</div></div>
+    <div class="modal-meta-item"><div class="mk">제출 시각</div><div class="mv" style="font-size:0.78rem;">${r.submittedAt||'-'}</div></div>`;
+  document.getElementById('modal-detail-text').textContent = r.detail || '(세부 내용 없음)';
   const noteBox = document.getElementById('modal-note-box');
-  if (r.note) {
-    noteBox.style.display = 'block';
-    document.getElementById('modal-note-text').textContent = r.note;
-  } else {
-    noteBox.style.display = 'none';
-  }
-
+  if (r.note) { noteBox.style.display='block'; document.getElementById('modal-note-text').textContent=r.note; }
+  else noteBox.style.display='none';
   document.getElementById('detail-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
